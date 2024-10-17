@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.profile.PlayerProfile;
 
@@ -18,13 +19,19 @@ public final class HeadCreator {
     private static Constructor<? extends PlayerProfile> playerProfileConstructor;
 
     public static ItemStack createFromBase64(String b64) {
-        if (playerProfileConstructor == null) createProfileConstructor(b64);
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
-        SkullMeta meta = (SkullMeta) skull.getItemMeta();
-        assert meta != null;
-        meta.setOwnerProfile(createProfile(b64));
-        skull.setItemMeta(meta);
+        setBase64Skin(skull, b64);
         return skull;
+    }
+
+    public static void setBase64Skin(SkullMeta meta, String b64) {
+        meta.setOwnerProfile(createProfile(b64));
+    }
+    public static void setBase64Skin(ItemStack item, String b64) {
+        ItemMeta meta = item.getItemMeta();
+        if (!(meta instanceof SkullMeta skullMeta)) throw new IllegalArgumentException("Item does not have a skull meta");
+        setBase64Skin(skullMeta, b64);
+        item.setItemMeta(skullMeta);
     }
 
     private static void createProfileConstructor(String b64) {
@@ -41,6 +48,7 @@ public final class HeadCreator {
     }
 
     private static PlayerProfile createProfile(String b64) {
+        if (playerProfileConstructor == null) createProfileConstructor(b64);
         GameProfile gameProfile = createGameProfile(b64);
         try {
             return playerProfileConstructor.newInstance(gameProfile);
